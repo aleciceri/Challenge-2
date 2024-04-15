@@ -1,13 +1,14 @@
 CC = g++
 CXXFLAGS ?= -std=c++20
-CPPFLAGS ?= -Wall -I. -I../../../Examples/pacs-examples/Examples/include -I../../../Examples/pacs-examples/Examples/include/muparserx
-LDFLAGS ?= -L../../../Examples/pacs-examples/Examples/lib
-LIBS ?= -lmuparser -lmuparserx
+CPPFLAGS ?= -O3 -Wall -I. 
+PACS_ROOT= ../../../Examples/pacs-examples/Examples/lib
+LDFLAGS ?= -L$(PACS_ROOT)
+# LIBS ?= 
 
-SOURCES = main.cpp functions.cpp
+SOURCES = main.cpp algebra.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE = main
-HEADERS = functions.hpp
+HEADERS = algebra.hpp
 
 all: $(EXECUTABLE)
 

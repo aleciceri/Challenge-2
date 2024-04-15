@@ -54,7 +54,7 @@ namespace algebra{
             // resize method for resizing the matrix
             void resize(std::size_t new_nrows,std::size_t new_ncols);
             // * friend operator between a Matrix and a vector
-            friend std::vector<T> operator*(Matrix<T,S> M,std::vector<T> vec);
+            friend std::vector<T> operator*(Matrix<T,S>& M,const std::vector<T>& vec);
         private:
             // number of rows and columns
             std::size_t nrows;
@@ -74,5 +74,8 @@ namespace algebra{
 };
 
 
+template<typename T> std::vector<T>& operator+=(std::vector<T>& lhs,const std::vector<T>& rhs);
+
+template<typename T> std::vector<T>& operator*(const T lhs,const std::vector<T>& rhs);
 
 #endif
