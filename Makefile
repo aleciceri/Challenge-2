@@ -1,9 +1,9 @@
 CC = g++
 CXXFLAGS ?= -std=c++20
 CPPFLAGS ?= -O3 -Wall -I. 
-PACS_ROOT= ../../../Examples/pacs-examples/Examples/lib
+PACS_ROOT= ../../Examples/pacs-examples/Examples/lib
 LDFLAGS ?= -L$(PACS_ROOT)
-# LIBS ?= 
+LIBS ?= 
 
 SOURCES = main.cpp algebra.cpp
 OBJECTS = $(SOURCES:.cpp=.o)

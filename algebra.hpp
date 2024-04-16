@@ -1,8 +1,14 @@
-#ifndef JACOBIANFACTORY_HPP
-#define JACOBIANFACTORY_HPP
+#ifndef ALGEBRA_HPP
+#define ALGEBRA_HPP
 
-#include<vector>
-#include<array>
+#include <vector>
+#include <array>
+#include <string>
+#include <iostream>
+#include <complex>
+#include <fstream>
+#include <sstream>
+#include <map>
 
 // definition of the StorageOrder enumerated class that will be useful for the template class Matrix 
 enum class StorageOrder : unsigned int
@@ -42,6 +48,10 @@ namespace algebra{
         public:
             // construntor that takes number of rows and number of columns
             Matrix(std::size_t n_rows,std::size_t n_cols):nrows(n_rows),ncols(n_cols){};
+            // constructor that takes the filename of the Matrix Market format file
+            Matrix(std::string filename);
+            // method taking the filename of the the Matrix Market format file
+            void read_mtx(std::string filename);
             // non-const call operator returns the reference to the value in the map
             T& operator()(std::size_t row, std::size_t col);
             // const call operator, return the value
@@ -64,7 +74,7 @@ namespace algebra{
             // boolean for keeping which storage is being used, false by default
             bool compressed=false;
             // vectors for the compressed 
-            std::vector<std::size_t> first_indexes(nrows+1);
+            std::vector<std::size_t> first_indexes;
             std::vector<std::size_t> second_indexes;
             std::vector<T> values;
             // method for checking if an element is stored or not, used in the const call operator 
@@ -73,9 +83,10 @@ namespace algebra{
 
 };
 
-
+/*
 template<typename T> std::vector<T>& operator+=(std::vector<T>& lhs,const std::vector<T>& rhs);
 
 template<typename T> std::vector<T>& operator*(const T lhs,const std::vector<T>& rhs);
+*/
 
 #endif
