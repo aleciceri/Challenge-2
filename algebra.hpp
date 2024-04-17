@@ -160,6 +160,8 @@ namespace algebra{
                     return;}
                 if constexpr(S==StorageOrder::Row){
                     first_indexes.resize(nrows+1);
+                    second_indexes.resize(elements.size());
+                    values.resize(elements.size());
                     first_indexes[0]=0;
                     for(std::size_t i=0;i<nrows;i++){
                         std::array<std::size_t,2> pos={i,0};
@@ -177,6 +179,8 @@ namespace algebra{
                 }
                 else{
                     first_indexes.resize(ncols+1);
+                    second_indexes.resize(elements.size());
+                    values.resize(elements.size());
                     first_indexes[0]=0;
                     for(std::size_t i=0;i<nrows;i++){
                         std::array<std::size_t,2> pos={0,i};
@@ -308,7 +312,7 @@ namespace algebra{
                     }
                 }
                 else{
-                    std::cout<<nrows<<" "<<ncols<<" "<<values.size();
+                    std::cout<<nrows<<" "<<ncols<<" "<<values.size()<<std::endl;
                     if constexpr(S==StorageOrder::Row)
                     {
                         for (std::size_t i = 0; i < nrows; i++){
