@@ -1,8 +1,8 @@
 CC = g++
 CXXFLAGS ?= -std=c++20
-CPPFLAGS ?= -O3 -Wall -I. 
-PACS_ROOT= ../../Examples/pacs-examples/Examples/lib
-LDFLAGS ?= -L$(PACS_ROOT)
+PACS_ROOT= ../../Examples/pacs-examples/Examples/src/Utilities
+CPPFLAGS ?= -O3 -Wall -I. -I$(PACS_ROOT)
+LDFLAGS ?= 
 LIBS ?= 
 
 SOURCES = main.cpp 

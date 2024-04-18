@@ -1,33 +1,35 @@
 #include "algebra.hpp"
+#include "chrono.hpp"
 using namespace algebra;
 
 int main(){
     std::string filename="Matrix.mtx";
-    Matrix<std::complex<double>,StorageOrder::Row> M(filename);
-    std::cout<<M.is_compressed()<<std::endl;
-    M.compress();
+    Matrix<double,StorageOrder::Column> M(filename);
+    Timings::Chrono chronometer;
+    //M.compress();
     //M.print();
-    M.uncompress();
+    //M.uncompress();
     //M.print();
-    std::cout<<M(1,1)<<" "<<M(1,2)<<std::endl;
+    /*std::cout<<M(1,1)<<" "<<M(1,2)<<std::endl;
     std::complex<double> a=M(1,2);
     std::cout<<a<<std::endl;
     M(1,3)={2.5,0};
-    M.print();
+    M.print();*/
 
-    std::vector<std::complex<double>> vec={{1.0,0},{1.0,0},{1.0,0},{1.0,0},{1.0,0}};
-    for (size_t i = 0; i < vec.size(); i++)
-    {
-        std::cout<<vec[i]<<" ";
-    }
-    std::cout<<std::endl;
-    std::vector<std::complex<double>> result=M*vec;
-    for (size_t i = 0; i < result.size(); i++)
-    {
-        std::cout<<result[i]<<" ";
-    }
-    std::cout<<std::endl;
+    std::vector<double> vec={1.0,1.0,1.0,1.0,1.0};
+    chronometer.start();
+    std::vector<double> result=M*vec;
+    chronometer.stop();
+    double time=chronometer.wallTime();
+    std::cout<<"Time for uncompressed: "<<time<<" microseconds"<<std::endl;
 
+    M.compress();
+
+    chronometer.start();
+    std::vector<double> result1=M*vec;
+    chronometer.stop();
+    double time1=chronometer.wallTime();
+    std::cout<<"Time for compressed: "<<time1<<" microseconds"<<std::endl;
     //M.resize(5,6);
     //M.print();
     // to be fixed: operator () never calls const one
