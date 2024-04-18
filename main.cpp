@@ -5,15 +5,15 @@ int main(){
     std::string filename="Matrix.mtx";
     Matrix<std::complex<double>,StorageOrder::Row> M(filename);
     std::cout<<M.is_compressed()<<std::endl;
-    //M.compress();
-    M.print();
-    /*M.uncompress();
-    M.print();
+    M.compress();
+    //M.print();
+    M.uncompress();
+    //M.print();
     std::cout<<M(1,1)<<" "<<M(1,2)<<std::endl;
-    double a=M(1,2);
+    std::complex<double> a=M(1,2);
     std::cout<<a<<std::endl;
-    M(1,3)=2.5;
-    M.print();*/
+    M(1,3)={2.5,0};
+    M.print();
 
     std::vector<std::complex<double>> vec={{1.0,0},{1.0,0},{1.0,0},{1.0,0},{1.0,0}};
     for (size_t i = 0; i < vec.size(); i++)
