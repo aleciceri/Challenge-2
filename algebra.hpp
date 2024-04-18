@@ -155,9 +155,7 @@ namespace algebra{
             void print();
             // template method for the norm, the default one will be the One Norm, then I'll specialize for the other 2 cases
             template<Norm N> 
-            double norm(){
-                /* code */
-            };
+            double norm<N>();
         private:
             // number of rows and columns
             std::size_t nrows;
@@ -547,6 +545,122 @@ std::size_t algebra::Matrix<T,S>::find_elements(std::size_t row, std::size_t col
                 return values.size();
             }
 
+template <typename T, StorageOrder S>
+template <Norm N>
+double algebra::Matrix<T,S>::norm<N>()
+{
+    // definition of norm, initialized as 0
+    double norm=0;
+    // differentiation with respect to the type of norm
+    if constexpr (N==Norm::One){
+        // differentiation with respect to the StorageOrder
+        if constexpr (S==StorageOrder::Column){
+            // differentiation with respect to the compressed or not
+            if(compressed){
+                // temporary variable
+                double temp=0;
+                // loop over the columns
+                for(std::size_t i=0;i<ncols;i++){
+                    // initialization of temporary for each column
+                    temp=0;
+                    // computation of sum of absolute values of elements of i-th column
+                    for(std::size_t j=first_indexes[i];j<first_indexes[i+1];j++){
+                        temp+=std::abs(values[j]);
+                    }
+                    // since I look for the max, if temp>norm, I store temp in norm and at the end I'll have the max
+                    if(temp>norm)
+                        norm=temp;
+                }
+            }
+            else{
+                // temporary value
+                double temp=0
+                // loop over the columns
+                for(std::size_t i=0;i<ncols;i++){
+                    // initialization of temporary for each column
+                    temp=0;
+                    // looking for iterator of first element of i-th column and first iterator after the last element of i-th column
+                    std::array<std::size_t,2> pos={0,i};
+                    auto lower=elements.lower_bound(pos);
+                    pos={i,ncols-1};
+                    auto upper=elements.upper_bound(pos);
+                    // computation of sum of absolute values of elements of i-th column
+                    for(auto iter=lower;iter!=upper;iter++){
+                        temp+=std::abs(iter->second);
+                    }
+                    // since I look for the max, if temp>norm, I store temp in norm and at the end I'll have the max
+                    if(temp>norm)
+                        norm=temp;
+                }
+            }
+        }
+        else{
+            // vector of temporaries, one for each column
+            std::vector<double> temp(ncols);
+            // differentiation with respect to compressed or not
+            if(compressed){
+                // loop over non zero values
+                for(std::size_t j=0;j<values.size();j++){
+                    // I add the absolute value of the element if the column-corresponent element of temp
+                    temp[second_indexes[j]]+=std::abs(values[j]);
+                }
+            }
+            else{
+                // loop over non-zero elements
+                for(auto iter : elements){
+                    // I add the absolute value of the element if the column-corresponent element of temp
+                    temp[iter->first[1]]+=std::abs(iter->second);
+                }
+            }
+            // the norm is the maximum element in the vector of temporaries
+            norm=std::max(temp);
+        }
+    }
+    else if constexpr (N==Norm::Infinity){
+        // differentiation with respect to compressed or not
+        if(compressed){
+            // loop over non-zero elements
+            for(std::size_t i=0;i<values.size();i++){
+                // if absolute value of element is greater than norm, I store it
+                if(std::abs(values[i])>norm)
+                    norm=std::abs(values[i]);
+            }
+        }
+        else{
+            // loop over non-zero elements
+            for(auto iter : elements){
+                // if absolute value of element is greater than norm, I store it
+                if(std::abs(elements->second)>norm)
+                    norm=std::abs(elements->second);
+            }
+        }
+    }
+    else{
+        // differentiation with respect to compressed or not
+        if(compressed){
+            // loop over non-zero elements
+            for(std::size_t i=0;i<values.size();i++){
+                // for every non-zero element, I add the square of its absolute value
+                norm+=square(std::abs(values[i]));
+            }
+        }
+        else{
+            // loop over non-zero elements
+            for(auto iter : elements){
+                // for every non-zero element, I add the square of its absolute value
+                norm+=square(std::abs(elements->second));
+            }
+        }
+        // store the square root of the sum of absolute values of all non zero elements
+        norm=std::sqrt(norm);        
+    }
+    // return the norm
+    return norm;
+}
 
+// function for square of a number, to allow me not to use std::pow or to call uselessy 2 times std::abs
+double square(double num){
+    return num*num;
+}
 
 #endif
