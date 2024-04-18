@@ -185,7 +185,7 @@ namespace algebra{
                     return values[index];
             };
             // method for checking if the matrix is compressed or not
-            inline bool is_compressed(){return compressed;};
+            bool is_compressed(){return compressed;};
             // compress and uncompress methods to change the Matrix storage in the memory
             void compress(){
                 // control => if the matrix is already compressed it tells the user and returns immediately
