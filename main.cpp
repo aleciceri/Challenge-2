@@ -34,9 +34,9 @@ int main(){
     //M.print();
     // to be fixed: operator () never calls const one
 
-    std::cout<<"One norm: "<<M.norm<Norm::One><<std::endl;
-    std::cout<<"One norm: "<<M.norm<Norm::One><<std::endl;
-    std::cout<<"One norm: "<<M.norm<Norm::One><<std::endl;
+    std::cout<<"One norm: "<<M.norm<Norm::One>()<<std::endl;
+    std::cout<<"Frobenius norm: "<<M.norm<Norm::Frobenius>()<<std::endl;
+    std::cout<<"Inifnity norm: "<<M.norm<Norm::Infinity>()<<std::endl;
 
     return 0;
 }

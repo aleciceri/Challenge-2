@@ -53,5 +53,8 @@ The new locations are computed based on the StorageOrder of the matrix object, f
 
 Then there is the friend call operator* between the Matrix and a vector. It firt checks if the dimensions are coherent, if not it raises an error. If the dimensions are correct, it computes the product following the given formulas (notice that in the case of column ordere Matrices, it add element-wise the j-th column multiplied by the j-th element of the vector, like in the formula, even if it is less readable than the row ordering case that is easier to be understood in the code).
 
+## NORM,OPERATOR*
+
 I decided to do a print() method to print the Matrix in the Matrix Market format, which is very useful to have a visual representation of the result, still being given an easy readable format for sparse matrices.
 
+## Warning: using the () operator the notation is the one of the std::vector, so the indexes start from 0 and go to nrows-1 or ncols-1, while in the print() method they are adapted to the Matrix Market format.
