@@ -61,12 +61,43 @@ namespace algebra{
             Matrix(std::size_t n_rows,std::size_t n_cols):nrows(n_rows),ncols(n_cols){};
             // constructor that takes the filename of the Matrix Market format file
             Matrix(std::string filename);
+            // copy-constructor
+            /*Matrix(Matrix<T,S> M_rhs){
+                nrows=M_rhs.nrows;
+                ncols=M_rhs.ncols;
+                if(M_rhs.compressed){
+                    compressed=true;
+                    first_indexes=M_rhs.first_indexes;
+                    second_indexes=M_rhs.second_indexes;
+                    values=M_rhs.values;
+                }
+                else{
+                    compressed=false;
+                    elements=M_rhs.elements;
+                }
+            }*/
             // method taking the filename of the the Matrix Market format file
             void read_mtx(std::string filename);
             // non-const call operator returns the reference to the value in the map
             T& operator()(std::size_t row, std::size_t col);
             // const call operator, return the value
             T operator()(std::size_t row, std::size_t col) const;
+            // copy operator for the Matrix-Matrix multiplication
+            /*Matrix<T,S>& operator=(Matrix<T,S>& M_lhs,Matrix<T,S>& M_rhs){
+                M_lhs.nrows=M_rhs.nrows;
+                M_lhs.ncols=M_rhs.ncols;
+                if(M_rhs.compressed){
+                    M_lhs.compressed=true;
+                    M_lhs.first_indexes=M_rhs.first_indexes;
+                    M_lhs.second_indexes=M_rhs.second_indexes;
+                    M_lhs.values=M_rhs.values;
+                }
+                else{
+                    M_lhs.compressed=false;
+                    M_lhs.elements=M_rhs.elements;
+                }
+                return M_lhs;
+            }*/
             // method for checking if the matrix is compressed or not
             bool is_compressed(){return compressed;};
             // compress and uncompress methods to change the Matrix storage in the memory
@@ -159,7 +190,7 @@ namespace algebra{
             friend std::vector<T> operator*(const Matrix<T,S>& M_lhs,const Matrix<T,S>& M_rhs){
                 // check for the dimension
                 if(M_lhs.ncols!=M_rhs.nrows)
-                    std::cerr<<"Matrix dimensions don't match"<<tsd::endl;
+                    std::cerr<<"Matrix dimensions don't match"<<std::endl;
                 if(M_rhs.ncols>1)
                     std::cerr<<"Right matrix with more than one column"<<std::endl;
                 std::vector<T> result(M_lhs.nrows);
@@ -172,7 +203,7 @@ namespace algebra{
                             // loop over non zero elements
                             for(std::size_t j=M_lhs.first_indexes[i];j<M_lhs.first_indexes[i+1];j++){
                                 // add the scalar row-column product for each row
-                                result[i]+=M_lhs.values[j]*M_rhs(M_lhs.second_indexes[j],0)
+                                result[i]+=M_lhs.values[j]*M_rhs(M_lhs.second_indexes[j],0);
                             }
                         }
                     }
@@ -182,7 +213,7 @@ namespace algebra{
                             // loop over non zero elements
                             for(std::size_t j=M_lhs.first_indexes[i];j<M_lhs.first_indexes[i+1];j++){
                                 // add the i-th column of M_lhs multiplied by the i-th value of M_rhs like in the formula
-                                result[M_lhs.second_indexes[j]]+=M_lhs.values[j]*M_rhs(i,0)
+                                result[M_lhs.second_indexes[j]]+=M_lhs.values[j]*M_rhs(i,0);
                             }
                     }
                 }
@@ -190,12 +221,18 @@ namespace algebra{
                     // loop over non zero elements of the matrix
                     for(auto iter : M_lhs.elements){
                         // add the product for each non zero element of M_lhs
-                        result[iter.first[0]]+=iter.second*M(iter.first[1],0);
+                        result[iter.first[0]]+=iter.second*M_rhs(iter.first[1],0);
                     }
                 }
+                return result;
             }
             // * friend operator between two Matrices
-            friend std::vector<T> operator*(const Matrix<T,S>& M_lhs,const Matrix<T,S>& M_rhs);
+            friend Matrix<T,S> operator*(const Matrix<T,S>& M_lhs,const Matrix<T,S>& M_rhs){
+                if(M_lhs.ncols!=M_rhs.nrows)
+                    std::cerr<<"Matrix dimensions don't match"<<std::endl;
+                Matrix<T,S> result(M_lhs.nrows,M_rhs.ncols);
+                // CODE
+            };
             // method to print the matrix in mtx format
             void print();
             // template method for the norm, the default one will be the One Norm, then I'll specialize for the other 2 cases
@@ -260,7 +297,7 @@ namespace algebra{
                             // loop over non-zero elements
                             for(auto iter : elements){
                                 // I add the absolute value of the element if the column-corresponent element of temp
-                                temp[iter->first[1]]+=std::abs(iter->second);
+                                temp[iter.first[1]]+=std::abs(iter.second);
                             }
                         }
                         // the norm is the maximum element in the vector of temporaries
@@ -324,7 +361,7 @@ namespace algebra{
             std::vector<std::size_t> second_indexes;
             std::vector<T> values;
             // method for checking if an element is stored or not in case of compressed matrix, used in the const call operator 
-            std::size_t find_elements(std::size_t row,std::size_t col);
+            std::size_t find_elements(std::size_t row,std::size_t col) const;
     };
 
 };
@@ -341,7 +378,7 @@ algebra::Matrix<T,S>::Matrix(std::string filename){
 
                 std::string line;
                 // Skip comment lines
-                while (getline(file, line) && line[0] == '%');
+                while (getline(file, line) && line[0] == '%'){};
 
                 // string stream for reding the linea
                 std::stringstream ss(line);
@@ -449,10 +486,11 @@ T algebra::Matrix<T,S>::operator()(std::size_t row, std::size_t col) const{
                 // if the matrix is not compressed, it checks if the element is stored, if so returns the value, 0 otherwise
                 std::array<std::size_t,2> pos={row,col};
                 if(!compressed){
-                    if(elements.find(pos)==elements.end())
+                    auto iter=elements.find(pos);
+                    if(iter==elements.end())
                         return 0;
                     else
-                        return elements[pos];
+                        return iter->second;
                 }
                 // if the matrix is compressed, it checks if the element is stored with another method, if so returns the value, 0 otherwise
                 std::size_t index = find_elements(row,col);
@@ -675,7 +713,7 @@ void algebra::Matrix<T,S>::print(){
             }
 
 template<typename T, StorageOrder S>
-std::size_t algebra::Matrix<T,S>::find_elements(std::size_t row, std::size_t col){
+std::size_t algebra::Matrix<T,S>::find_elements(std::size_t row, std::size_t col) const{
                 // since I control the bounds before the call of this function, I don't need to do that again
                 if(S==StorageOrder::Row){
                     // if I have zero 'non-zero' elements on the given row, for sure the element is not stored
@@ -695,7 +733,7 @@ std::size_t algebra::Matrix<T,S>::find_elements(std::size_t row, std::size_t col
                     for(std::size_t i=first_indexes[col];i<first_indexes[col+1];i++){
                         if(second_indexes[i]==row)
                             return i;
-                }
+                    }
                 }
                 return values.size();
             }

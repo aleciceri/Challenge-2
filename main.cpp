@@ -3,20 +3,11 @@
 using namespace algebra;
 
 int main(){
-    std::string filename="Matrix.mtx";
-    Matrix<double,StorageOrder::Column> M(filename);
+    std::string filename="lnsp_131.mtx";
+    Matrix<double,StorageOrder::Row> M(filename);
     Timings::Chrono chronometer;
-    //M.compress();
-    //M.print();
-    //M.uncompress();
-    //M.print();
-    /*std::cout<<M(1,1)<<" "<<M(1,2)<<std::endl;
-    std::complex<double> a=M(1,2);
-    std::cout<<a<<std::endl;
-    M(1,3)={2.5,0};
-    M.print();*/
 
-    std::vector<double> vec={1.0,1.0,1.0,1.0,1.0};
+    std::vector<double> vec(131);
     chronometer.start();
     std::vector<double> result=M*vec;
     chronometer.stop();
@@ -30,13 +21,18 @@ int main(){
     chronometer.stop();
     double time1=chronometer.wallTime();
     std::cout<<"Time for compressed: "<<time1<<" microseconds"<<std::endl;
-    //M.resize(5,6);
-    //M.print();
-    // to be fixed: operator () never calls const one
 
     std::cout<<"One norm: "<<M.norm<Norm::One>()<<std::endl;
     std::cout<<"Frobenius norm: "<<M.norm<Norm::Frobenius>()<<std::endl;
     std::cout<<"Inifnity norm: "<<M.norm<Norm::Infinity>()<<std::endl;
+
+    Matrix<double,StorageOrder::Row> M2(131,1);
+    std::vector<double> result2=M*M2;
+    for (size_t i = 0; i < 131; i++)
+    {
+        std::cout<<result[i]<<" ";
+    }
+
 
     return 0;
 }

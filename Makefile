@@ -1,7 +1,7 @@
 CC = g++
 CXXFLAGS ?= -std=c++20
-PACS_ROOT= ../../Examples/pacs-examples/Examples/src/Utilities
-CPPFLAGS ?= -O3 -Wall -I. -I$(PACS_ROOT)
+PACS_ROOT= ../../Examples/pacs-examples/Examples
+CPPFLAGS ?= -O3 -Wall -I. -I$(PACS_ROOT)/src/Utilities
 LDFLAGS ?= 
 LIBS ?= 
 
