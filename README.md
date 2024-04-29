@@ -49,4 +49,4 @@ The methods are the following ones:
 - print() method to print the Matrix in the Matrix Market format, which is very useful to have a visual representation of the result, still being given an easy readable format for sparse matrices.
 - template method norm,. AS for the storage ordering, I created an enumerated class Norm to distinguish the type of norm in thi template method. The matrix can be stored in every possible way when the method is called. The possible norms are One. Frobenius and Infinity.
 
-## Warning: using the () operator the notation is the one of the std::vector, so the indexes start from 0 and go to nrows-1 or ncols-1, while in the print() method they are adapted to the Matrix Market format.
+### Warning: using the () operator the notation is the one of the std::vector, so the indexes start from 0 and go to nrows-1 or ncols-1, while in the print() method they are adapted to the Matrix Market format.
