@@ -24,8 +24,11 @@ enum class Norm : unsigned int
   Frobenius = 2
 };
 
-// definition of the comparator for the map of the Matrix class, so that it will be ordered differently based on the StorageOrder
-// this is the default one
+/**
+ * @brief definition of the comparator for the map of the Matrix class, so that it will be ordered differently based on the StorageOrder, this is the default one for the Row ordering
+ * 
+ * @tparam S: StorageOrder enumerated type
+ */
 template <StorageOrder S>
 struct MyTypeComparator {
     bool operator()(const std::array<std::size_t,2>& lhs, const std::array<std::size_t,2>& rhs) const {
@@ -36,8 +39,9 @@ struct MyTypeComparator {
         }
 };
 
-// this is the specialization for the column type matrix, since there are only two possible cases,
-// it chooses the default if it is Row-wise, while it chooses the following if it is column-wise
+/**
+ * @brief this is the specialization for the column type matrix, since there are only two possible cases, it chooses the default if it is Row-wise, while it chooses the following if it is column-wise
+ */
 template <>
 struct MyTypeComparator<StorageOrder::Column>{
     bool operator()(const std::array<std::size_t,2>& lhs, const std::array<std::size_t,2>& rhs) const {
@@ -72,13 +76,19 @@ namespace algebra{
             // copy operator for the Matrix-Matrix multiplication
             Matrix<T,S>& operator=(Matrix<T,S>& M_rhs);
             // method for checking if the matrix is compressed or not
-            bool is_compressed(){return compressed;};
+            bool is_compressed() const{return compressed;};
             // compress and uncompress methods to change the Matrix storage in the memory
             void compress();
             void uncompress();
             // resize method for resizing the matrix
             void resize(std::size_t new_nrows,std::size_t new_ncols);
-            // * friend operator between a Matrix and a vector
+            /**
+             * @brief * friend operator between a Matrix and a vector
+             * 
+             * @param M: Matrix<T,S> object
+             * @param vec: vector of type T elements, its size is intended to match the number fo columns of M
+             * @return std::vector<T>: result of the Matrix-vector multiplication
+             */
             friend std::vector<T> operator*(const Matrix<T,S>& M,const std::vector<T>& vec){
                 // control => check for right dimensions
                 if(vec.size()!=M.ncols)
@@ -159,7 +169,13 @@ namespace algebra{
                 // return the result vector
                 return result;
             };
-            // * friend operator between a Matrix and a Matrix with only 1 column
+            /**
+             * @brief * friend operator between a Matrix and a Matrix with only 1 column
+             * 
+             * @param M_lhs: Matrix<T,S> object
+             * @param M_rhs: Matrix<T,S> object, its number of rows is intended to match the number of columns of M_lhs, and it is intended to have only one column
+             * @return std::vector<T>: result of the Matrix-Matrix multiplication, stored as a vector since it has only one dimension 
+             */
             friend std::vector<T> operator*(const Matrix<T,S>& M_lhs,const Matrix<T,S>& M_rhs){
                 // check for the dimension
                 if(M_lhs.ncols!=M_rhs.nrows)
@@ -199,19 +215,35 @@ namespace algebra{
                 }
                 return result;
             }
-            // * friend operator between two Matrices
-            friend Matrix<T,S> operator*(const Matrix<T,S>& M_lhs,const Matrix<T,S>& M_rhs){
+            /**
+             * @brief friend method for the multiplication between two matrices between two Matrices
+             * 
+             * @param M_lhs: Matrix<T,S> object
+             * @param M_rhs: Matrix<T,S> object, its number of rows is intended to match the number of columns of M_lhs 
+             * @return Matrix<T,S>: result of the Matrix-Matrix multiplication, stored as a Matrix
+             */
+            friend Matrix<T,S> matrixMultiplication(const Matrix<T,S>& M_lhs,const Matrix<T,S>& M_rhs){
+                // check for the dimensions
                 if(M_lhs.ncols!=M_rhs.nrows)
                     std::cerr<<"Matrix dimensions don't match"<<std::endl;
+                // definition of the result
                 Matrix<T,S> result(M_lhs.nrows,M_rhs.ncols);
+                // we differentiate the operator for the left matrix, we'll use the () operator for the right one
                 if(M_lhs.is_compressed()){
+                    // for the compressed case we need also to differentiate with respect to the StorageOrder
                     if constexpr(S==StorageOrder::Row){
+                        // loop over the number of rows of left matrix
                         for (size_t i = 0; i < M_lhs.nrows; i++)
                         {
+                            // loop over the non zero elements of the row
                             for (size_t j = M_lhs.first_indexes[i]; j < M_lhs.first_indexes[i+1]; j++)
                             {
-                                for(size_t k=0;k<M_lhs.ncols;k++){
+                                // loop over the columns of the second matrix
+                                for(size_t k=0;k<M_rhs.ncols;k++){
+                                    // for each element, we compute the adding value
                                     T value=M_lhs.values[j]*M_rhs(M_lhs.second_indexes[j],k);
+                                    // if value is not 0, then we change the result, we can do it because result is a compressed matrix
+                                    // if value is 0, we don't add it because we don't want to store 0 elements
                                     if(value!=0)
                                         result(i,k)+=value;
                                 }   
@@ -219,13 +251,19 @@ namespace algebra{
                         }
                     }
                     else{
+                        // loop over the columns of the left matrix
                         for (size_t i = 0; i < M_lhs.ncols; i++)
                         {
+                            // loop over non zero values of the column of the left matrix
                             for (size_t j = M_lhs.first_indexes[i]; j < M_lhs.first_indexes[i+1]; j++)
                             {
-                                for (size_t k = 0; k < M_lhs.ncols; k++)
+                                // loop over columns ov the right matrix
+                                for (size_t k = 0; k < M_rhs.ncols; k++)
                                 {
+                                    // for each element, we compute the adding value
                                     T value=M_lhs.values[j]*M_rhs(i,k);
+                                    // if value is not 0, then we change the result, we can do it because result is a compressed matrix
+                                    // if value is 0, we don't add it because we don't want to store 0 elements
                                     if(value!=0)
                                         result(M_lhs.second_indexes[j],k)+=value;
                                 }
@@ -234,17 +272,31 @@ namespace algebra{
                     }
                 }
                 else{
-                    if constexpr(S==StorageOrder::Row){
-                        for(auto iter : M_lhs.elements){
-                            
+                    // loop over non zero elements of the left matrix
+                    for(auto iter : M_lhs.elements){
+                        // loop over columns of the rigth matrix
+                        for (size_t i = 0; i < M_rhs.ncols; i++)
+                        {
+                            // for each element, we compute the adding value
+                            T value=iter.second*M_rhs(iter.first[1],i);
+                            // if value is not 0, then we change the result, we can do it because result is a compressed matrix
+                            // if value is 0, we don't add it because we don't want to store 0 elements
+                            if(value!=0)
+                                result(iter.first[0],i)+=value;   
                         }
                     }
                 }
+                // return the result matrix
                 return result;
             };
             // method to print the matrix in mtx format
             void print();
-            // template method for the norm, the default one will be the One Norm, then I'll specialize for the other 2 cases
+            /**
+             * @brief template method for the norm
+             * 
+             * @tparam N: type of norm from enumerated class Norm 
+             * @return double: norm of type N of the Matrix object from which this method is called
+             */
             template<Norm N> double norm(){
                 // definition of norm, initialized as 0
                 double norm=0;
@@ -376,6 +428,13 @@ namespace algebra{
 };
 
 // Following there are all the missing definitions of the method of the Matrix class
+/**
+ * @brief Construct a new algebra::Matrix<T,S>::Matrix object form a Matrix Market file
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ * @param filename: string for the name of the Matrix Market file
+ */
 template<typename T, StorageOrder S>
 algebra::Matrix<T,S>::Matrix(std::string filename){
                 // definition of file stream
@@ -415,22 +474,40 @@ algebra::Matrix<T,S>::Matrix(std::string filename){
                 std::cout << "Matrix read successfully from file: " << filename << std::endl;
             }
 
+/**
+ * @brief Construct a new algebra::Matrix<T,S>::Matrix object
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ * @param M_rhs: Matrix object to be copied
+ */
 template<typename T, StorageOrder S>
 algebra::Matrix<T,S>::Matrix(algebra::Matrix<T,S>& M_rhs){
+                // first of all, we store the number of rows and columns
                 nrows=M_rhs.nrows;
                 ncols=M_rhs.ncols;
+                // Check if the matrix i compressed or not, we'll store the data in the exact same way
                 if(M_rhs.compressed){
+                    // copy of the data and change of compressed boolean
                     compressed=true;
                     first_indexes=M_rhs.first_indexes;
                     second_indexes=M_rhs.second_indexes;
                     values=M_rhs.values;
                 }
                 else{
+                    // copy of the data and change of compressed boolean
                     compressed=false;
                     elements=M_rhs.elements;
                 }
             }
 
+/**
+ * @brief method for reading a matrix from a Matrix MArket file and overwriting the stored one
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ * @param filename: string for the name of the Matrix Market file 
+ */
 template<typename T, StorageOrder S>
 void algebra::Matrix<T,S>::read_mtx(std::string filename){
                 // I'm overwriting the matrix, so I have to erase the previous data
@@ -482,6 +559,15 @@ void algebra::Matrix<T,S>::read_mtx(std::string filename){
                 return;
             }
 
+/**
+ * @brief call operator for returning the reference to the element in the given position, if no element is stored in that position, it is created if the matrix is not compressed, error otherwise
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ * @param row: row position of the wanted element 
+ * @param col: column position of the wanted element 
+ * @return T&:  reference to the element in the given position
+ */
 template<typename T, StorageOrder S>
 T& algebra::Matrix<T,S>::operator()(std::size_t row, std::size_t col){
                 // if values are out of bounds, it raises an error
@@ -503,6 +589,15 @@ T& algebra::Matrix<T,S>::operator()(std::size_t row, std::size_t col){
                 return elements[pos];
             }
 
+/**
+ * @brief call operator for returning the value of the element in the given position, if no element is stored in that position, it returns 0
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ * @param row: row position of the wanted element 
+ * @param col: column position of the wanted element 
+ * @return T: value of the element in the given position
+ */
 template<typename T, StorageOrder S>
 T algebra::Matrix<T,S>::operator()(std::size_t row, std::size_t col) const{
                 // if values are out of bounds, it raises an error
@@ -526,23 +621,41 @@ T algebra::Matrix<T,S>::operator()(std::size_t row, std::size_t col) const{
                     return values[index];
             }
 
+/**
+ * @brief copy operator, created for the functions which return Matrix objects
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ * @param M_rhs: matrix to be copied 
+ * @return algebra::Matrix<T,S>&: returns the reference to the Matrix object to allow a=b=c
+ */
 template<typename T, StorageOrder S>
 algebra::Matrix<T,S>& algebra::Matrix<T,S>::operator=(algebra::Matrix<T,S>& M_rhs){
+                // first of all, we store the number of rows and columns
                 nrows=M_rhs.nrows;
                 ncols=M_rhs.ncols;
+                // Check if the matrix i compressed or not, we'll store the data in the exact same way
                 if(M_rhs.compressed){
+                    // copy of the data and change of compressed boolean
                     compressed=true;
                     first_indexes=M_rhs.first_indexes;
                     second_indexes=M_rhs.second_indexes;
                     values=M_rhs.values;
                 }
                 else{
+                    // copy of the data and change of compressed boolean
                     compressed=false;
                     elements=M_rhs.elements;
                 }
                 return this;
             }
 
+/**
+ * @brief compress method to change the Matrix storage from COOmap to CSR (or CSC)
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ */
 template<typename T, StorageOrder S>
 void algebra::Matrix<T,S>::compress(){
                 // control => if the matrix is already compressed it tells the user and returns immediately
@@ -619,6 +732,12 @@ void algebra::Matrix<T,S>::compress(){
                 return;
             }
 
+/**
+ * @brief compress method to change the Matrix storage from CSR (or CSC) to COOmap
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ */
 template<typename T, StorageOrder S>
 void algebra::Matrix<T,S>::uncompress(){
                 // control => if matrix is already uncompressed, It tells the user and stops
@@ -662,6 +781,14 @@ void algebra::Matrix<T,S>::uncompress(){
                 return;
             }
 
+/**
+ * @brief method to resize a Matrix object, if the new dimensions are coherent it changes not only the dimension of the matrix but also the location of the stored elements
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ * @param new_nrows: new number of rows
+ * @param new_ncols: new number of columns, it has to be such that the number of total elements of the matrix are equal or greater to the previous one
+ */
 template<typename T, StorageOrder S>
 void algebra::Matrix<T,S>::resize(std::size_t new_nrows, std::size_t new_ncols){
                 // control => if the new size has less elements, the resize cannot be done, if there are more, the new elements are 0 by default
@@ -710,6 +837,12 @@ void algebra::Matrix<T,S>::resize(std::size_t new_nrows, std::size_t new_ncols){
                 return;
             }
 
+/**
+ * @brief method to print a Matrix object file in the Matrix Market format
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ */
 template<typename T, StorageOrder S>
 void algebra::Matrix<T,S>::print(){
                 // differentiation over compressed or not
@@ -754,6 +887,15 @@ void algebra::Matrix<T,S>::print(){
                 }
             }
 
+/**
+ * @brief private method to check if, for an compressed Matrix object, in a given position it is stored a file or not
+ * 
+ * @tparam T: typename
+ * @tparam S: StorageOrder type: Row or Column
+ * @param row: row position to be checked
+ * @param col: column position to be checked 
+ * @return std::size_t: values.size() if in the given position there is no element, the index of the element in the value vector if it is stored
+ */
 template<typename T, StorageOrder S>
 std::size_t algebra::Matrix<T,S>::find_elements(std::size_t row, std::size_t col) const{
                 // since I control the bounds before the call of this function, I don't need to do that again
