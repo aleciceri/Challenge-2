@@ -62,20 +62,7 @@ namespace algebra{
             // constructor that takes the filename of the Matrix Market format file
             Matrix(std::string filename);
             // copy-constructor
-            /*Matrix(Matrix<T,S> M_rhs){
-                nrows=M_rhs.nrows;
-                ncols=M_rhs.ncols;
-                if(M_rhs.compressed){
-                    compressed=true;
-                    first_indexes=M_rhs.first_indexes;
-                    second_indexes=M_rhs.second_indexes;
-                    values=M_rhs.values;
-                }
-                else{
-                    compressed=false;
-                    elements=M_rhs.elements;
-                }
-            }*/
+            Matrix(Matrix<T,S>& M_rhs);
             // method taking the filename of the the Matrix Market format file
             void read_mtx(std::string filename);
             // non-const call operator returns the reference to the value in the map
@@ -83,21 +70,7 @@ namespace algebra{
             // const call operator, return the value
             T operator()(std::size_t row, std::size_t col) const;
             // copy operator for the Matrix-Matrix multiplication
-            /*Matrix<T,S>& operator=(Matrix<T,S>& M_lhs,Matrix<T,S>& M_rhs){
-                M_lhs.nrows=M_rhs.nrows;
-                M_lhs.ncols=M_rhs.ncols;
-                if(M_rhs.compressed){
-                    M_lhs.compressed=true;
-                    M_lhs.first_indexes=M_rhs.first_indexes;
-                    M_lhs.second_indexes=M_rhs.second_indexes;
-                    M_lhs.values=M_rhs.values;
-                }
-                else{
-                    M_lhs.compressed=false;
-                    M_lhs.elements=M_rhs.elements;
-                }
-                return M_lhs;
-            }*/
+            Matrix<T,S>& operator=(Matrix<T,S>& M_rhs);
             // method for checking if the matrix is compressed or not
             bool is_compressed(){return compressed;};
             // compress and uncompress methods to change the Matrix storage in the memory
@@ -231,7 +204,43 @@ namespace algebra{
                 if(M_lhs.ncols!=M_rhs.nrows)
                     std::cerr<<"Matrix dimensions don't match"<<std::endl;
                 Matrix<T,S> result(M_lhs.nrows,M_rhs.ncols);
-                // CODE
+                if(M_lhs.is_compressed()){
+                    if constexpr(S==StorageOrder::Row){
+                        for (size_t i = 0; i < M_lhs.nrows; i++)
+                        {
+                            for (size_t j = M_lhs.first_indexes[i]; j < M_lhs.first_indexes[i+1]; j++)
+                            {
+                                for(size_t k=0;k<M_lhs.ncols;k++){
+                                    T value=M_lhs.values[j]*M_rhs(M_lhs.second_indexes[j],k);
+                                    if(value!=0)
+                                        result(i,k)+=value;
+                                }   
+                            }
+                        }
+                    }
+                    else{
+                        for (size_t i = 0; i < M_lhs.ncols; i++)
+                        {
+                            for (size_t j = M_lhs.first_indexes[i]; j < M_lhs.first_indexes[i+1]; j++)
+                            {
+                                for (size_t k = 0; k < M_lhs.ncols; k++)
+                                {
+                                    T value=M_lhs.values[j]*M_rhs(i,k);
+                                    if(value!=0)
+                                        result(M_lhs.second_indexes[j],k)+=value;
+                                }
+                            }
+                        }
+                    }
+                }
+                else{
+                    if constexpr(S==StorageOrder::Row){
+                        for(auto iter : M_lhs.elements){
+                            
+                        }
+                    }
+                }
+                return result;
             };
             // method to print the matrix in mtx format
             void print();
@@ -407,6 +416,22 @@ algebra::Matrix<T,S>::Matrix(std::string filename){
             }
 
 template<typename T, StorageOrder S>
+algebra::Matrix<T,S>::Matrix(algebra::Matrix<T,S>& M_rhs){
+                nrows=M_rhs.nrows;
+                ncols=M_rhs.ncols;
+                if(M_rhs.compressed){
+                    compressed=true;
+                    first_indexes=M_rhs.first_indexes;
+                    second_indexes=M_rhs.second_indexes;
+                    values=M_rhs.values;
+                }
+                else{
+                    compressed=false;
+                    elements=M_rhs.elements;
+                }
+            }
+
+template<typename T, StorageOrder S>
 void algebra::Matrix<T,S>::read_mtx(std::string filename){
                 // I'm overwriting the matrix, so I have to erase the previous data
                 if(compressed){
@@ -499,6 +524,23 @@ T algebra::Matrix<T,S>::operator()(std::size_t row, std::size_t col) const{
                     return 0;
                 else 
                     return values[index];
+            }
+
+template<typename T, StorageOrder S>
+algebra::Matrix<T,S>& algebra::Matrix<T,S>::operator=(algebra::Matrix<T,S>& M_rhs){
+                nrows=M_rhs.nrows;
+                ncols=M_rhs.ncols;
+                if(M_rhs.compressed){
+                    compressed=true;
+                    first_indexes=M_rhs.first_indexes;
+                    second_indexes=M_rhs.second_indexes;
+                    values=M_rhs.values;
+                }
+                else{
+                    compressed=false;
+                    elements=M_rhs.elements;
+                }
+                return this;
             }
 
 template<typename T, StorageOrder S>
