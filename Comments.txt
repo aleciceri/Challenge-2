@@ -1,0 +1,23 @@
+README.md: a bit verbose. It is missing the most important part: how to compile your code!
+
+Code is commented a lot. Nice!
+
+
+Checklist:
+  - sparse_matrix constructor:   OKAY
+  - comparison operator:         OKAY
+  - compress:                    OKAY
+  - uncompress:                  OKAY
+  - data is properly cleared:    OKAY
+  - call to non-const / const assignment operator: OKAY.
+  - resize method:               OKAY
+  - operator*:                   OKAY
+  - reading from file:           OKAY
+
+EXTRAs: 
+  - Matrix multiplication:       OKAY
+  - Matrix vector:               OKAY
+  - Norms:                       OKAY
+
+General Comments:
+  - the dimension of the vector / matrix shouldn't be hardcoded in the main function.
